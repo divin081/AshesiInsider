@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ashesi Insider - Lecturers</title>
+    <!-- Link to the new external CSS file -->
+    <link rel="stylesheet" href="review-style.css" />
+    <!-- Simple icon font for search, notifications, user, etc. -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+  </head>
+  <body>
+    <header>
+      <div class="logo">Ashesi Insider</div>
+      <nav>
+        <ul>
+          <li><a href="#">Courses</a></li>
+          <li><a href="#">Restaurants</a></li>
+          <li><a href="#" class="active">Lecturers</a></li>
+          <li><a href="#">Hostels</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <div class="header-search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" placeholder="Search" />
+        </div>
+        <button class="icon-btn"><i class="fa-solid fa-bell"></i></button>
+        <button class="icon-btn" id="user-profile-btn">
+          <i class="fa-solid fa-user"></i>
+        </button>
+      </div>
+    </header>
+
+    <main class="main-layout">
+      <!-- Main Feed Column -->
+      <div class="main-feed">
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" placeholder="Search for Lecturers or reviews" />
+        </div>
+        <div class="post-box">
+          <i class="fa-solid fa-user-circle"></i>
+          <span>Post as "Student"</span>
+        </div>
+
+        <!-- Example Review Card 1 -->
+        <div class="review-card">
+          <div class="card-header">
+            <span class="course-code eng"
+              ><i class="fa-solid fa-chalkboard-user"></i
+            ></span>
+            <div class="card-title">
+              <h3>Dr. Ayorkor Korsah</h3>
+              <p>Computer Science</p>
+            </div>
+            <span class="time">1d</span>
+          </div>
+          <div class="rating-badge">4.9★</div>
+          <h4>Incredibly supportive and brilliant!</h4>
+          <p class="review-text">
+            Dr. Korsah's AI class was one of the best I've taken. She explains
+            complex topics with so much clarity and is always willing to help
+            during office hours. You can tell she's passionate about the subject
+            and her students' success.
+          </p>
+          <div class="card-footer">
+            <div><i class="fa-solid fa-heart"></i> 215</div>
+            <div><i class="fa-solid fa-comment"></i> 88 Comments</div>
+            <span class="comment-bubble">30</span>
+          </div>
+        </div>
+
+        <!-- Example Review Card 2 -->
+        <div class="review-card">
+          <div class="card-header">
+            <span class="course-code eng"
+              ><i class="fa-solid fa-chalkboard-user"></i
+            ></span>
+            <div class="card-title">
+              <h3>Dr. Esi Ansah</h3>
+              <p>Business Administration</p>
+            </div>
+            <span class="time">2d</span>
+          </div>
+          <div class="rating-badge">4.7★</div>
+          <h4>Leadership lessons for life.</h4>
+          <p class="review-text">
+            Taking a class with Dr. Ansah is more than just academics; it's a
+            life lesson. She pushes you to think critically and to be a better
+            leader. Her classes are very interactive and engaging. Highly
+            recommend, even if you're not a BA major.
+          </p>
+          <div class="card-footer">
+            <div><i class="fa-solid fa-heart"></i> 198</div>
+            <div><i class="fa-solid fa-comment"></i> 65 Comments</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar Column -->
+      <aside class="sidebar">
+        <div class="sidebar-card">
+          <div class="sidebar-header">
+            <h3>Popular Lecturers</h3>
+            <a href="#">Explore all →</a>
+          </div>
+          <ul class="popular-list">
+            <li>
+              <span class="course-code eng"
+                ><i class="fa-solid fa-chalkboard-user"></i
+              ></span>
+              <div class="course-info">
+                <strong>Dr. Ayorkor Korsah</strong>
+                <small>Computer Science</small>
+                <small>2.5K reviews</small>
+              </div>
+              <a href="#" class="view-btn">View</a>
+            </li>
+            <li>
+              <span class="course-code eng"
+                ><i class="fa-solid fa-chalkboard-user"></i
+              ></span>
+              <div class="course-info">
+                <strong>Dr. Esi Ansah</strong>
+                <small>Business Administration</small>
+                <small>2.2K reviews</small>
+              </div>
+              <a href="#" class="view-btn">View</a>
+            </li>
+            <li>
+              <span class="course-code eng"
+                ><i class="fa-solid fa-chalkboard-user"></i
+              ></span>
+              <div class="course-info">
+                <strong>Dr. Patrick Awuah</strong>
+                <small>Leadership</small>
+                <small>1.9K reviews</small>
+              </div>
+              <a href="#" class="view-btn">View</a>
+            </li>
+            <li>
+              <span class="course-code eng"
+                ><i class="fa-solid fa-chalkboard-user"></i
+              ></span>
+              <div class="course-info">
+                <strong>Dr. Nathan Amanquah</strong>
+                <small>Engineering</small>
+                <small>1.5K reviews</small>
+              </div>
+              <a href="#" class="view-btn">View</a>
+            </li>
+          </ul>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Sign In / Sign Up Modal -->
+    <div class="modal-overlay" id="signin-modal">
+      <div class="modal-box">
+        <button class="modal-close-btn" id="modal-close-btn">&times;</button>
+        <h2>Create an account or sign in</h2>
+        <p class="terms-text">
+          By continuing, you agree to our <a href="#">Terms of Use</a> and
+          <a href="#">Privacy Policy</a>.
+        </p>
+
+        <button class="social-button google">
+          <img
+            src="https://img.icons8.com/color/48/000000/google-logo.png"
+            alt="Google icon"
+          />
+          Continue with Google
+        </button>
+        <button class="social-button apple">
+          <img
+            src="https://img.icons8.com/ios-filled/50/000000/mac-os.png"
+            alt="Apple icon"
+          />
+          Continue with Apple
+        </button>
+
+        <div class="or-divider">or</div>
+
+        <input type="email" id="modal-email-input" placeholder="Enter email" />
+        <button class="email-signup-button">Continue with email</button>
+      </div>
+    </div>
+
+    <!-- Link to the new external JavaScript file -->
+    <script src="review-script.js" defer></script>
+  </body>
+</html>
