@@ -3,13 +3,14 @@
 import { useEffect, useState } from 'react';
 import Navigation from '@/components/navigation';
 import SignInModal from '@/components/sign-in-modal';
+import HomePage from '@/components/pages/home-page';
 import CoursesPage from '@/components/pages/courses-page';
 import RestaurantsPage from '@/components/pages/restaurants-page';
 import LecturersPage from '@/components/pages/lecturers-page';
 import HostelsPage from '@/components/pages/hostels-page';
 
 export default function Home() {
-  const [currentPage, setCurrentPage] = useState('courses');
+  const [currentPage, setCurrentPage] = useState('home');
   const [showSignIn, setShowSignIn] = useState(false);
 
   useEffect(() => {
@@ -18,6 +19,8 @@ export default function Home() {
 
   const renderPage = () => {
     switch (currentPage) {
+      case 'home':
+        return <HomePage onNavigate={setCurrentPage} />;
       case 'courses':
         return <CoursesPage />;
       case 'restaurants':
@@ -27,7 +30,7 @@ export default function Home() {
       case 'hostels':
         return <HostelsPage />;
       default:
-        return <CoursesPage />;
+        return <HomePage onNavigate={setCurrentPage} />;
     }
   };
 
