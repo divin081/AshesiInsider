@@ -3,7 +3,6 @@
 import { X } from 'lucide-react';
 import { useState } from 'react';
 import SignUpModal from './sign-up-modal';
-import { supabase } from '@/lib/supabaseClient';
 
 interface SignInModalProps {
   onClose: () => void;
@@ -19,27 +18,11 @@ export default function SignInModal({ onClose, onSuccess }: SignInModalProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    // Placeholder auth (no backend). Implement your own later.
     setLoading(true);
-    if (!supabase) {
-      setLoading(false);
-      setError('Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local.');
-      return;
-    }
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    await new Promise((r) => setTimeout(r, 600));
     setLoading(false);
-    if (signInError) {
-      setError(signInError.message);
-      return;
-    }
-    if (onSuccess) {
-      onSuccess();
-    } else {
-      onClose();
-    }
+    onSuccess ? onSuccess() : onClose();
   };
 
   if (showSignUp) {
@@ -102,22 +85,7 @@ export default function SignInModal({ onClose, onSuccess }: SignInModalProps) {
           </button>
         </form>
 
-        <button
-          type="button"
-          onClick={() => {
-            if (!supabase) {
-              setError('Supabase is not configured. Add env vars to .env.local.');
-              return;
-            }
-            supabase.auth.signInWithOAuth({
-              provider: 'google',
-              options: { redirectTo: typeof window !== 'undefined' ? window.location.origin : undefined },
-            });
-          }}
-          className="w-full mt-4 border border-border rounded-lg py-3 font-semibold hover:bg-accent/50 transition-colors"
-        >
-          Continue with Google
-        </button>
+        
 
         <p className="text-center text-muted-foreground text-sm mt-4">
           Don't have an account?{' '}

@@ -2,7 +2,6 @@
 
 import { X } from 'lucide-react';
 import { useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
 
 interface SignUpModalProps {
   onClose: () => void;
@@ -26,25 +25,10 @@ export default function SignUpModal({ onClose }: SignUpModalProps) {
       return;
     }
     setLoading(true);
-    if (!supabase) {
-      setLoading(false);
-      setError('Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local.');
-      return;
-    }
-    const { error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { full_name: fullName },
-        emailRedirectTo: typeof window !== 'undefined' ? window.location.origin : undefined,
-      },
-    });
+    // Placeholder register (no backend). Implement your own later.
+    await new Promise((r) => setTimeout(r, 700));
     setLoading(false);
-    if (signUpError) {
-      setError(signUpError.message);
-      return;
-    }
-    setMessage('Check your email to confirm your account.');
+    setMessage('Account created locally (mock). Implement your server-side registration next.');
   };
 
   return (

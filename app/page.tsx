@@ -8,7 +8,6 @@ import CoursesPage from '@/components/pages/courses-page';
 import RestaurantsPage from '@/components/pages/restaurants-page';
 import LecturersPage from '@/components/pages/lecturers-page';
 import HostelsPage from '@/components/pages/hostels-page';
-import { supabase } from '@/lib/supabaseClient';
 
 export default function Home() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -19,27 +18,6 @@ export default function Home() {
   useEffect(() => {
     // Show sign in on first load for demo
     setShowSignIn(true);
-  }, []);
-
-  useEffect(() => {
-    let mounted = true;
-    const init = async () => {
-      try {
-        if (!supabase) return;
-        const { data } = await supabase.auth.getSession();
-        if (mounted) setIsAuthed(!!data.session);
-        supabase.auth.onAuthStateChange((_event, session) => {
-          if (!mounted) return;
-          setIsAuthed(!!session);
-        });
-      } catch {
-        // ignore; safe fallback to unauthenticated
-      }
-    };
-    void init();
-    return () => {
-      mounted = false;
-    };
   }, []);
 
   const protectedPages = new Set(['courses', 'restaurants', 'lecturers', 'hostels']);
@@ -78,13 +56,8 @@ export default function Home() {
         onSignIn={() => setShowSignIn(true)}
         isAuthed={isAuthed}
         onSignOut={async () => {
-          try {
-            if (supabase) {
-              await supabase.auth.signOut();
-            }
-          } finally {
-            setCurrentPage('home');
-          }
+          setIsAuthed(false);
+          setCurrentPage('home');
         }}
       />
       {renderPage()}
@@ -99,6 +72,7 @@ export default function Home() {
             } else {
               setCurrentPage('courses');
             }
+            setIsAuthed(true);
           }}
         />
       )}
