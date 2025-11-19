@@ -20,13 +20,37 @@ export default function SignInModal({ onClose, onSuccess }: SignInModalProps) {
     e.preventDefault();
     // Placeholder auth (no backend). Implement your own later.
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 600));
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
     setLoading(false);
-    onSuccess ? onSuccess() : onClose();
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(data?.error ?? 'Login failed');
+      return;
+    }
+    if (onSuccess) {
+      onSuccess();
+    } else {
+      onClose();
+    }
   };
 
   if (showSignUp) {
-    return <SignUpModal onClose={onClose} />;
+    return (
+      <SignUpModal
+        onClose={onClose}
+        onSuccess={(_firstName) => {
+          if (onSuccess) {
+            onSuccess();
+          } else {
+            onClose();
+          }
+        }}
+      />
+    );
   }
 
   return (

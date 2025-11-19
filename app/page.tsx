@@ -16,8 +16,18 @@ export default function Home() {
   const [pendingPage, setPendingPage] = useState<string | null>(null);
 
   useEffect(() => {
-    // Show sign in on first load for demo
-    setShowSignIn(true);
+    const loadSession = async () => {
+      try {
+        const res = await fetch('/api/auth/session', { cache: 'no-store' });
+        const authed = res.ok;
+        setIsAuthed(authed);
+        setShowSignIn(!authed);
+      } catch {
+        setIsAuthed(false);
+        setShowSignIn(true);
+      }
+    };
+    void loadSession();
   }, []);
 
   const protectedPages = new Set(['courses', 'restaurants', 'lecturers', 'hostels']);
@@ -56,8 +66,12 @@ export default function Home() {
         onSignIn={() => setShowSignIn(true)}
         isAuthed={isAuthed}
         onSignOut={async () => {
-          setIsAuthed(false);
-          setCurrentPage('home');
+          try {
+            await fetch('/api/auth/logout', { method: 'POST' });
+          } finally {
+            setIsAuthed(false);
+            setCurrentPage('home');
+          }
         }}
       />
       {renderPage()}
@@ -66,6 +80,7 @@ export default function Home() {
           onClose={() => setShowSignIn(false)}
           onSuccess={() => {
             setShowSignIn(false);
+            setIsAuthed(true);
             if (pendingPage) {
               setCurrentPage(pendingPage);
               setPendingPage(null);
