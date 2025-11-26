@@ -4,7 +4,9 @@ import { useEffect, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Trash2, Users, BookOpen, Utensils, Building2, GraduationCap, MessageSquare } from 'lucide-react';
+import { Trash2, Users, BookOpen, Utensils, Building2, GraduationCap, MessageSquare, Eye, EyeOff } from 'lucide-react';
+import { validatePasswordStrength } from '@/lib/validation';
+import { PasswordStrengthIndicator } from '@/components/ui/password-strength-indicator';
 
 interface Stats {
     users: number;
@@ -43,6 +45,10 @@ export default function AdminDashboard() {
     const [newAdminEmail, setNewAdminEmail] = useState('');
     const [newAdminPassword, setNewAdminPassword] = useState('');
     const [addingAdmin, setAddingAdmin] = useState(false);
+    const [showAdminPassword, setShowAdminPassword] = useState(false);
+
+    // Calculate password strength for admin creation
+    const adminPasswordStrength = validatePasswordStrength(newAdminPassword);
 
     const fetchStats = async () => {
         try {
@@ -215,31 +221,59 @@ export default function AdminDashboard() {
 
                     <TabsContent value="users">
                         <Card>
-                            <CardHeader className="flex flex-row items-center justify-between">
+                            <CardHeader>
                                 <CardTitle>Users & Admins</CardTitle>
-                                <form onSubmit={handleAddAdmin} className="flex gap-2 items-center">
-                                    <input
-                                        type="email"
-                                        placeholder="Email"
-                                        value={newAdminEmail}
-                                        onChange={(e) => setNewAdminEmail(e.target.value)}
-                                        className="px-3 py-2 border rounded-md text-sm w-48"
-                                        required
-                                    />
-                                    <input
-                                        type="password"
-                                        placeholder="Password"
-                                        value={newAdminPassword}
-                                        onChange={(e) => setNewAdminPassword(e.target.value)}
-                                        className="px-3 py-2 border rounded-md text-sm w-48"
-                                        required
-                                    />
-                                    <Button type="submit" disabled={addingAdmin} size="sm">
-                                        {addingAdmin ? 'Adding...' : 'Add Admin'}
-                                    </Button>
-                                </form>
                             </CardHeader>
                             <CardContent>
+                                {/* Add Admin Form */}
+                                <form onSubmit={handleAddAdmin} className="mb-6 p-4 border rounded-lg bg-muted/30">
+                                    <h3 className="font-semibold mb-4">Create New Admin Account</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">Email Address</label>
+                                            <input
+                                                type="email"
+                                                placeholder="admin@ashesi.edu.gh"
+                                                value={newAdminEmail}
+                                                onChange={(e) => setNewAdminEmail(e.target.value)}
+                                                className="w-full px-3 py-2 border rounded-md text-sm"
+                                                required
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-2">Password</label>
+                                            <div className="relative">
+                                                <input
+                                                    type={showAdminPassword ? "text" : "password"}
+                                                    placeholder="••••••••"
+                                                    value={newAdminPassword}
+                                                    onChange={(e) => setNewAdminPassword(e.target.value)}
+                                                    className="w-full px-3 py-2 pr-10 border rounded-md text-sm"
+                                                    required
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowAdminPassword(!showAdminPassword)}
+                                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                                >
+                                                    {showAdminPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {newAdminPassword && (
+                                        <div className="mt-4">
+                                            <PasswordStrengthIndicator strength={adminPasswordStrength} password={newAdminPassword} />
+                                        </div>
+                                    )}
+                                    <div className="mt-4 flex justify-end">
+                                        <Button type="submit" disabled={addingAdmin || !adminPasswordStrength.isValid}>
+                                            {addingAdmin ? 'Creating...' : 'Create Admin'}
+                                        </Button>
+                                    </div>
+                                </form>
+
+                                {/* Users Table */}
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-left">
                                         <thead>

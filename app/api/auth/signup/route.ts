@@ -2,6 +2,11 @@ import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabaseServer'
 import { createSessionToken, ONE_WEEK_SECONDS, SESSION_COOKIE } from '@/lib/session'
+import {
+  validateEmail,
+  sanitizeName,
+  getPasswordErrorMessage
+} from '@/lib/validation'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -17,15 +22,28 @@ export async function POST(req: NextRequest) {
     const password = body.password ?? ''
     const profileType: ProfileType = body.profileType ?? 'student'
 
-    if (!firstName || !lastName || !email || !password) {
-      return NextResponse.json({ error: 'Fill all required fields' }, { status: 400 })
+    // Validate first name
+    const firstNameValidation = sanitizeName(firstName)
+    if (!firstNameValidation.isValid) {
+      return NextResponse.json({ error: firstNameValidation.error }, { status: 400 })
     }
-    if (password.length < 6) {
-      return NextResponse.json({ error: 'Password must be at least 6 characters long' }, { status: 400 })
+
+    // Validate last name
+    const lastNameValidation = sanitizeName(lastName)
+    if (!lastNameValidation.isValid) {
+      return NextResponse.json({ error: lastNameValidation.error }, { status: 400 })
     }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
-      return NextResponse.json({ error: 'Enter a valid email address' }, { status: 400 })
+
+    // Validate email
+    const emailValidation = validateEmail(email)
+    if (!emailValidation.isValid) {
+      return NextResponse.json({ error: emailValidation.error }, { status: 400 })
+    }
+
+    // Validate password strength
+    const passwordError = getPasswordErrorMessage(password)
+    if (passwordError) {
+      return NextResponse.json({ error: passwordError }, { status: 400 })
     }
 
     if (!supabaseServer) {
@@ -33,10 +51,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Use SECURITY DEFINER RPC to insert safely with server-side hashing
+    // Use sanitized values from validation
     const { data, error } = await supabaseServer.rpc('register_user', {
-      _first_name: firstName,
-      _last_name: lastName,
-      _email: email,
+      _first_name: firstNameValidation.sanitized!,
+      _last_name: lastNameValidation.sanitized!,
+      _email: emailValidation.sanitized!,
       _password: password,
       _profile_type: profileType,
     })
@@ -53,8 +72,8 @@ export async function POST(req: NextRequest) {
 
     const token = createSessionToken({
       sub: Number(created.id),
-      email,
-      firstName,
+      email: emailValidation.sanitized!,
+      firstName: firstNameValidation.sanitized!,
       profileType,
     })
 

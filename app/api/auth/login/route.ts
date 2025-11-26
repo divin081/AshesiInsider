@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabaseServer'
 import { createSessionToken, ONE_WEEK_SECONDS } from '@/lib/session'
 import { SESSION_COOKIE } from '@/lib/session'
+import { validateEmail } from '@/lib/validation'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -10,11 +11,19 @@ export const dynamic = 'force-dynamic'
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}))
-    const email = (body.email ?? '').toLowerCase().trim()
+    const emailInput = (body.email ?? '').toLowerCase().trim()
     const password = body.password ?? ''
 
-    if (!email || !password) {
-      return NextResponse.json({ error: 'Fill in all required fields' }, { status: 400 })
+    // Validate email format
+    const emailValidation = validateEmail(emailInput)
+    if (!emailValidation.isValid) {
+      return NextResponse.json({ error: 'Please enter a valid email address' }, { status: 400 })
+    }
+
+    const email = emailValidation.sanitized!
+
+    if (!password) {
+      return NextResponse.json({ error: 'Password is required' }, { status: 400 })
     }
 
     if (!supabaseServer) {

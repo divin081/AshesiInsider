@@ -1,8 +1,10 @@
 'use client';
 
-import { X } from 'lucide-react';
+import { X, Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from '@/hooks/use-toast';
 import SignUpModal from './sign-up-modal';
+
 
 interface SignInModalProps {
   onClose: () => void;
@@ -15,6 +17,7 @@ export default function SignInModal({ onClose, onSuccess }: SignInModalProps) {
   const [showSignUp, setShowSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,14 +93,23 @@ export default function SignInModal({ onClose, onSuccess }: SignInModalProps) {
             <label className="block text-sm font-medium text-foreground mb-2">
               Password
             </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full px-4 py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder-muted-foreground"
-              required
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full px-4 py-3 pr-12 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder-muted-foreground"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
           </div>
 
           <button
@@ -109,7 +121,7 @@ export default function SignInModal({ onClose, onSuccess }: SignInModalProps) {
           </button>
         </form>
 
-        
+
 
         <p className="text-center text-muted-foreground text-sm mt-4">
           Don't have an account?{' '}
