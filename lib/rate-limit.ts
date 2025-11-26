@@ -6,7 +6,7 @@ type RateLimitRecord = {
 const RATE_LIMIT_MAP = new Map<string, RateLimitRecord>()
 
 const MAX_ATTEMPTS = 3
-const LOCKOUT_TIME_MS = 5 * 60 * 1000 // 15 minutes
+const LOCKOUT_TIME_MS = 5 * 60 * 1000 // 5 minutes
 
 export class RateLimiter {
     /**
