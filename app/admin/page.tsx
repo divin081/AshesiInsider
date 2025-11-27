@@ -116,7 +116,7 @@ export default function AdminPage() {
                     </div>
                     <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
                     <p className="text-muted-foreground mb-6">
-                        You are logged in, but your account does not have administrator privileges.
+                        You are logged in, but your account does not have administrator privileges Sorry.
                     </p>
                     <div className="flex gap-4 justify-center">
                         <Button variant="outline" onClick={() => router.push('/')}>
