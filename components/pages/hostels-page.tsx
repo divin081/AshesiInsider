@@ -17,6 +17,14 @@ export default function HostelsPage({ onNavigate }: HostelsPageProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [ratingFilter, setRatingFilter] = useState(0);
   const [expandedHostels, setExpandedHostels] = useState<Record<number, boolean>>({});
+  const [likedReviews, setLikedReviews] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const stored = localStorage.getItem('liked_reviews');
+    if (stored) {
+      setLikedReviews(new Set(JSON.parse(stored)));
+    }
+  }, []);
 
   const toggleReviews = (hostelId: number) => {
     setExpandedHostels((prev) => ({
@@ -31,7 +39,7 @@ export default function HostelsPage({ onNavigate }: HostelsPageProps) {
         if (!supabase) { setHostels([]); setLoading(false); return; }
         const { data, error } = await supabase
           .from('hostels')
-          .select('id, name, location, price_range, rating, reviews_count, hostel_reviews (author, rating, title, content, helpful, created_at)')
+          .select('id, name, location, price_range, rating, reviews_count, hostel_reviews (id, author, rating, title, content, helpful, created_at)')
           .order('id', { ascending: true });
         if (error) { setHostels([]); setLoading(false); return; }
         const mapped = (data || []).map((h: any) => ({
@@ -42,6 +50,7 @@ export default function HostelsPage({ onNavigate }: HostelsPageProps) {
           rating: Number(h.rating ?? 0),
           reviews: Number(h.reviews_count ?? 0),
           reviews_list: (h.hostel_reviews || []).map((r: any) => ({
+            id: r.id,
             author: r.author ?? 'Anonymous',
             rating: r.rating,
             title: r.title,
@@ -78,6 +87,47 @@ export default function HostelsPage({ onNavigate }: HostelsPageProps) {
 
     return matchesSearch && matchesRating;
   });
+
+  const handleHelpful = async (reviewId: number) => {
+    const reviewKey = `hostel_${reviewId}`;
+    const isLiked = likedReviews.has(reviewKey);
+    const action = isLiked ? 'unlike' : 'like';
+
+    try {
+      const response = await fetch('/api/reviews/helpful', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reviewId, type: 'hostel', action }),
+      });
+
+      if (response.ok) {
+        const { count } = await response.json();
+
+        // Update liked state
+        const newLiked = new Set(likedReviews);
+        if (isLiked) {
+          newLiked.delete(reviewKey);
+        } else {
+          newLiked.add(reviewKey);
+        }
+        setLikedReviews(newLiked);
+        localStorage.setItem('liked_reviews', JSON.stringify(Array.from(newLiked)));
+
+        // Update count in UI
+        setHostels(prev => {
+          if (!prev) return null;
+          return prev.map(h => ({
+            ...h,
+            reviews_list: h.reviews_list.map((r: any) =>
+              r.id === reviewId ? { ...r, helpful: count } : r
+            )
+          }));
+        });
+      }
+    } catch (error) {
+      console.error('Error updating helpful count:', error);
+    }
+  };
 
   return (
     <main className="min-h-screen bg-background py-12">
@@ -162,7 +212,12 @@ export default function HostelsPage({ onNavigate }: HostelsPageProps) {
                 {/* Reviews */}
                 <div className="space-y-4">
                   {(expandedHostels[hostel.id] ? hostel.reviews_list : hostel.reviews_list.slice(0, 3)).map((review: any, idx: number) => (
-                    <ReviewCard key={idx} {...review} />
+                    <ReviewCard
+                      key={idx}
+                      {...review}
+                      isLiked={likedReviews.has(`hostel_${review.id}`)}
+                      onHelpful={() => handleHelpful(review.id)}
+                    />
                   ))}
                 </div>
 

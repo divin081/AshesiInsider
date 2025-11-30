@@ -1,6 +1,6 @@
 'use client';
 
-import { Menu, X } from 'lucide-react';
+import { Menu, X, User } from 'lucide-react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -69,6 +69,18 @@ export default function Navigation({ currentPage, onNavigate, onSignIn, isAuthed
 
           {/* Sign In Button */}
           <div className="flex items-center gap-4">
+            {isAuthed && (
+              <button
+                onClick={() => onNavigate('profile')}
+                className={`hidden sm:flex items-center justify-center w-10 h-10 rounded-full transition-colors ${currentPage === 'profile'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted hover:bg-muted/80 text-muted-foreground'
+                  }`}
+                title="Profile"
+              >
+                <User size={20} />
+              </button>
+            )}
             <button
               onClick={() => {
                 if (isAuthed) {
@@ -124,6 +136,20 @@ export default function Navigation({ currentPage, onNavigate, onSignIn, isAuthed
                   }`}
               >
                 <span className="font-medium">Admin</span>
+              </button>
+            )}
+            {isAuthed && (
+              <button
+                onClick={() => {
+                  onNavigate('profile');
+                  setMobileMenuOpen(false);
+                }}
+                className={`w-full flex items-center px-4 py-3 transition-colors ${currentPage === 'profile'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'hover:bg-opacity-80'
+                  }`}
+              >
+                <span className="font-medium">Profile</span>
               </button>
             )}
             <button

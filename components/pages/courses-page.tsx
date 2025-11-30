@@ -17,6 +17,14 @@ export default function CoursesPage({ onNavigate }: CoursesPageProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [ratingFilter, setRatingFilter] = useState(0);
   const [expandedCourses, setExpandedCourses] = useState<Record<number, boolean>>({});
+  const [likedReviews, setLikedReviews] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const stored = localStorage.getItem('liked_reviews');
+    if (stored) {
+      setLikedReviews(new Set(JSON.parse(stored)));
+    }
+  }, []);
 
   const toggleReviews = (courseId: number) => {
     setExpandedCourses((prev) => ({
@@ -31,7 +39,7 @@ export default function CoursesPage({ onNavigate }: CoursesPageProps) {
         if (!supabase) { setCourses([]); setLoading(false); return; }
         const { data, error } = await supabase
           .from('courses')
-          .select('id, name, code, instructor, semester, rating, reviews_count, course_reviews (author, rating, title, content, helpful, created_at)')
+          .select('id, name, code, instructor, semester, rating, reviews_count, course_reviews (id, author, rating, title, content, helpful, created_at)')
           .order('id', { ascending: true });
         if (error) { setCourses([]); setLoading(false); return; }
         const mapped = (data || []).map((c: any) => ({
@@ -43,6 +51,7 @@ export default function CoursesPage({ onNavigate }: CoursesPageProps) {
           instructor: c.instructor,
           semester: c.semester,
           reviews_list: (c.course_reviews || []).map((r: any) => ({
+            id: r.id,
             author: r.author ?? 'Anonymous',
             rating: r.rating,
             title: r.title,
@@ -80,6 +89,47 @@ export default function CoursesPage({ onNavigate }: CoursesPageProps) {
 
     return matchesSearch && matchesRating;
   });
+
+  const handleHelpful = async (reviewId: number) => {
+    const reviewKey = `course_${reviewId}`;
+    const isLiked = likedReviews.has(reviewKey);
+    const action = isLiked ? 'unlike' : 'like';
+
+    try {
+      const response = await fetch('/api/reviews/helpful', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reviewId, type: 'course', action }),
+      });
+
+      if (response.ok) {
+        const { count } = await response.json();
+
+        // Update liked state
+        const newLiked = new Set(likedReviews);
+        if (isLiked) {
+          newLiked.delete(reviewKey);
+        } else {
+          newLiked.add(reviewKey);
+        }
+        setLikedReviews(newLiked);
+        localStorage.setItem('liked_reviews', JSON.stringify(Array.from(newLiked)));
+
+        // Update count in UI
+        setCourses(prev => {
+          if (!prev) return null;
+          return prev.map(c => ({
+            ...c,
+            reviews_list: c.reviews_list.map((r: any) =>
+              r.id === reviewId ? { ...r, helpful: count } : r
+            )
+          }));
+        });
+      }
+    } catch (error) {
+      console.error('Error updating helpful count:', error);
+    }
+  };
 
   return (
     <main className="min-h-screen bg-background py-12">
@@ -161,7 +211,12 @@ export default function CoursesPage({ onNavigate }: CoursesPageProps) {
                 {/* Reviews */}
                 <div className="space-y-4">
                   {(expandedCourses[course.id] ? course.reviews_list : course.reviews_list.slice(0, 3)).map((review: any, idx: number) => (
-                    <ReviewCard key={idx} {...review} />
+                    <ReviewCard
+                      key={idx}
+                      {...review}
+                      isLiked={likedReviews.has(`course_${review.id}`)}
+                      onHelpful={() => handleHelpful(review.id)}
+                    />
                   ))}
                 </div>
 

@@ -10,6 +10,7 @@ import LecturersPage from '@/components/pages/lecturers-page';
 import HostelsPage from '@/components/pages/hostels-page';
 import AddReviewPage from '@/components/pages/add-review-page';
 import AdminDashboard from '@/components/pages/admin-dashboard';
+import ProfilePage from '@/components/pages/profile-page';
 
 export default function Home() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -38,7 +39,7 @@ export default function Home() {
     void loadSession();
   }, []);
 
-  const protectedPages = new Set(['courses', 'restaurants', 'lecturers', 'hostels']);
+  const protectedPages = new Set(['courses', 'restaurants', 'lecturers', 'hostels', 'profile']);
 
   const handleNavigate = (page: string) => {
     if (page.startsWith('add-review-')) {
@@ -86,6 +87,8 @@ export default function Home() {
         );
       case 'admin':
         return isAdmin ? <AdminDashboard /> : <HomePage onNavigate={handleNavigate} />;
+      case 'profile':
+        return <ProfilePage onNavigate={handleNavigate} />;
       default:
         return <HomePage onNavigate={handleNavigate} />;
     }

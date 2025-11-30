@@ -17,6 +17,14 @@ export default function LecturersPage({ onNavigate }: LecturersPageProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [ratingFilter, setRatingFilter] = useState(0);
   const [expandedLecturers, setExpandedLecturers] = useState<Record<number, boolean>>({});
+  const [likedReviews, setLikedReviews] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const stored = localStorage.getItem('liked_reviews');
+    if (stored) {
+      setLikedReviews(new Set(JSON.parse(stored)));
+    }
+  }, []);
 
   const toggleReviews = (lecturerId: number) => {
     setExpandedLecturers((prev) => ({
@@ -31,7 +39,7 @@ export default function LecturersPage({ onNavigate }: LecturersPageProps) {
         if (!supabase) { setLecturers([]); setLoading(false); return; }
         const { data, error } = await supabase
           .from('lecturers')
-          .select('id, name, department, courses, rating, reviews_count, lecturer_reviews (author, rating, title, content, helpful, created_at)')
+          .select('id, name, department, courses, rating, reviews_count, lecturer_reviews (id, author, rating, title, content, helpful, created_at)')
           .order('id', { ascending: true });
         if (error) { setLecturers([]); setLoading(false); return; }
         const mapped = (data || []).map((l: any) => ({
@@ -42,6 +50,7 @@ export default function LecturersPage({ onNavigate }: LecturersPageProps) {
           rating: Number(l.rating ?? 0),
           reviews: Number(l.reviews_count ?? 0),
           reviews_list: (l.lecturer_reviews || []).map((r: any) => ({
+            id: r.id,
             author: r.author ?? 'Anonymous',
             rating: r.rating,
             title: r.title,
@@ -78,6 +87,48 @@ export default function LecturersPage({ onNavigate }: LecturersPageProps) {
 
     return matchesSearch && matchesRating;
   });
+
+  const handleHelpful = async (reviewId: number) => {
+    const reviewKey = `lecturer_${reviewId}`;
+    const isLiked = likedReviews.has(reviewKey);
+    const action = isLiked ? 'unlike' : 'like';
+
+    try {
+      const response = await fetch('/api/reviews/helpful', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reviewId, type: 'lecturer', action }),
+      });
+
+      if (response.ok) {
+        const { count } = await response.json();
+
+        // Update liked state
+        const newLiked = new Set(likedReviews);
+        if (isLiked) {
+          newLiked.delete(reviewKey);
+        } else {
+          newLiked.add(reviewKey);
+        }
+        setLikedReviews(newLiked);
+        localStorage.setItem('liked_reviews', JSON.stringify(Array.from(newLiked)));
+
+        // Update count in UI
+        setLecturers(prev => {
+          if (!prev) return null;
+          return prev.map(l => ({
+            ...l,
+            reviews_list: l.reviews_list.map((r: any) =>
+              r.id === reviewId ? { ...r, helpful: count } : r
+            )
+          }));
+        });
+      }
+    } catch (error) {
+      console.error('Error updating helpful count:', error);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-background py-12">
       <div className="max-w-6xl mx-auto px-4">
@@ -160,7 +211,12 @@ export default function LecturersPage({ onNavigate }: LecturersPageProps) {
                 {/* Reviews */}
                 <div className="space-y-4">
                   {(expandedLecturers[lecturer.id] ? lecturer.reviews_list : lecturer.reviews_list.slice(0, 3)).map((review: any, idx: number) => (
-                    <ReviewCard key={idx} {...review} />
+                    <ReviewCard
+                      key={idx}
+                      {...review}
+                      isLiked={likedReviews.has(`lecturer_${review.id}`)}
+                      onHelpful={() => handleHelpful(review.id)}
+                    />
                   ))}
                 </div>
 
