@@ -4,9 +4,7 @@ import { useEffect, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Trash2, Users, BookOpen, Utensils, Building2, GraduationCap, MessageSquare, Eye, EyeOff } from 'lucide-react';
-import { validatePasswordStrength } from '@/lib/validation';
-import { PasswordStrengthIndicator } from '@/components/ui/password-strength-indicator';
+import { Trash2, Users, BookOpen, Utensils, Building2, GraduationCap, MessageSquare } from 'lucide-react';
 
 interface Stats {
     users: number;
@@ -37,18 +35,48 @@ interface Review {
     table: string;
 }
 
+interface Course {
+    id: number;
+    code: string;
+    name: string;
+    instructor: string;
+    rating: number;
+    reviews_count: number;
+}
+
+interface Lecturer {
+    id: number;
+    name: string;
+    department: string;
+    rating: number;
+    reviews_count: number;
+}
+
+interface Restaurant {
+    id: number;
+    name: string;
+    location: string;
+    rating: number;
+    reviews_count: number;
+}
+
+interface Hostel {
+    id: number;
+    name: string;
+    location: string;
+    rating: number;
+    reviews_count: number;
+}
+
 export default function AdminDashboard() {
     const [stats, setStats] = useState<Stats | null>(null);
     const [users, setUsers] = useState<User[]>([]);
     const [reviews, setReviews] = useState<Review[]>([]);
+    const [courses, setCourses] = useState<Course[]>([]);
+    const [lecturers, setLecturers] = useState<Lecturer[]>([]);
+    const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+    const [hostels, setHostels] = useState<Hostel[]>([]);
     const [loading, setLoading] = useState(true);
-    const [newAdminEmail, setNewAdminEmail] = useState('');
-    const [newAdminPassword, setNewAdminPassword] = useState('');
-    const [addingAdmin, setAddingAdmin] = useState(false);
-    const [showAdminPassword, setShowAdminPassword] = useState(false);
-
-    // Calculate password strength for admin creation
-    const adminPasswordStrength = validatePasswordStrength(newAdminPassword);
 
     const fetchStats = async () => {
         try {
@@ -86,6 +114,54 @@ export default function AdminDashboard() {
         }
     };
 
+    const fetchCourses = async () => {
+        try {
+            const res = await fetch('/api/admin/courses');
+            if (res.ok) {
+                const data = await res.json();
+                setCourses(data.courses);
+            }
+        } catch (error) {
+            console.error('Error fetching courses:', error);
+        }
+    };
+
+    const fetchLecturers = async () => {
+        try {
+            const res = await fetch('/api/admin/lecturers');
+            if (res.ok) {
+                const data = await res.json();
+                setLecturers(data.lecturers);
+            }
+        } catch (error) {
+            console.error('Error fetching lecturers:', error);
+        }
+    };
+
+    const fetchRestaurants = async () => {
+        try {
+            const res = await fetch('/api/admin/restaurants');
+            if (res.ok) {
+                const data = await res.json();
+                setRestaurants(data.restaurants);
+            }
+        } catch (error) {
+            console.error('Error fetching restaurants:', error);
+        }
+    };
+
+    const fetchHostels = async () => {
+        try {
+            const res = await fetch('/api/admin/hostels');
+            if (res.ok) {
+                const data = await res.json();
+                setHostels(data.hostels);
+            }
+        } catch (error) {
+            console.error('Error fetching hostels:', error);
+        }
+    };
+
     const handleDeleteUser = async (id: string) => {
         if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
         try {
@@ -101,68 +177,9 @@ export default function AdminDashboard() {
         }
     };
 
-    const handleToggleAdmin = async (user: User) => {
-        if (user.role === 'admin') {
-            if (!confirm(`Remove admin privileges from ${user.full_name}?`)) return;
-            try {
-                const res = await fetch(`/api/admin/users?email=${user.email}&action=remove_admin`, { method: 'DELETE' });
-                if (res.ok) {
-                    setUsers(users.map(u => u.id === user.id ? { ...u, role: 'user' } : u));
-                } else {
-                    alert('Failed to remove admin');
-                }
-            } catch (error) {
-                console.error('Error removing admin:', error);
-            }
-        } else {
-            // Add admin
-            // We need a UI for this, but here we are toggling existing user.
-            // Let's just use the add admin flow for consistency or allow direct toggle here.
-            // Direct toggle is easier for existing users.
-            if (!confirm(`Make ${user.full_name} an admin?`)) return;
-            try {
-                const res = await fetch('/api/admin/users', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: user.email }),
-                });
-                if (res.ok) {
-                    setUsers(users.map(u => u.id === user.id ? { ...u, role: 'admin' } : u));
-                } else {
-                    const data = await res.json();
-                    alert(data.error || 'Failed to add admin');
-                }
-            } catch (error) {
-                console.error('Error adding admin:', error);
-            }
-        }
-    };
 
-    const handleAddAdmin = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!newAdminEmail || !newAdminPassword) return;
-        setAddingAdmin(true);
-        try {
-            const res = await fetch('/api/admin/users', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: newAdminEmail, password: newAdminPassword }),
-            });
-            if (res.ok) {
-                alert('Admin added successfully');
-                setNewAdminEmail('');
-                setNewAdminPassword('');
-                void fetchUsers(); // Refresh list
-            } else {
-                const data = await res.json();
-                alert(data.error || 'Failed to add admin');
-            }
-        } catch (error) {
-            console.error('Error adding admin:', error);
-        } finally {
-            setAddingAdmin(false);
-        }
-    };
+
+
 
     const handleDeleteReview = async (id: number, table: string) => {
         if (!confirm('Are you sure you want to delete this review?')) return;
@@ -179,10 +196,36 @@ export default function AdminDashboard() {
         }
     };
 
+    const handleDeleteEntity = async (id: number, type: 'courses' | 'lecturers' | 'restaurants' | 'hostels') => {
+        if (!confirm(`Are you sure you want to delete this ${type.slice(0, -1)}?`)) return;
+        try {
+            const res = await fetch(`/api/admin/${type}?id=${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                if (type === 'courses') setCourses(courses.filter(i => i.id !== id));
+                if (type === 'lecturers') setLecturers(lecturers.filter(i => i.id !== id));
+                if (type === 'restaurants') setRestaurants(restaurants.filter(i => i.id !== id));
+                if (type === 'hostels') setHostels(hostels.filter(i => i.id !== id));
+                void fetchStats();
+            } else {
+                alert(`Failed to delete ${type.slice(0, -1)}`);
+            }
+        } catch (error) {
+            console.error(`Error deleting ${type.slice(0, -1)}:`, error);
+        }
+    };
+
     useEffect(() => {
         const loadData = async () => {
             setLoading(true);
-            await Promise.all([fetchStats(), fetchUsers(), fetchReviews()]);
+            await Promise.all([
+                fetchStats(),
+                fetchUsers(),
+                fetchReviews(),
+                fetchCourses(),
+                fetchLecturers(),
+                fetchRestaurants(),
+                fetchHostels()
+            ]);
             setLoading(false);
         };
         void loadData();
@@ -216,6 +259,10 @@ export default function AdminDashboard() {
                 <Tabs defaultValue="users" className="w-full">
                     <TabsList className="mb-8">
                         <TabsTrigger value="users">Manage Users</TabsTrigger>
+                        <TabsTrigger value="courses">Manage Courses</TabsTrigger>
+                        <TabsTrigger value="lecturers">Manage Lecturers</TabsTrigger>
+                        <TabsTrigger value="restaurants">Manage Restaurants</TabsTrigger>
+                        <TabsTrigger value="hostels">Manage Hostels</TabsTrigger>
                         <TabsTrigger value="reviews">Manage Reviews</TabsTrigger>
                     </TabsList>
 
@@ -225,53 +272,7 @@ export default function AdminDashboard() {
                                 <CardTitle>Users & Admins</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                {/* Add Admin Form */}
-                                <form onSubmit={handleAddAdmin} className="mb-6 p-4 border rounded-lg bg-muted/30">
-                                    <h3 className="font-semibold mb-4">Create New Admin Account</h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-medium mb-2">Email Address</label>
-                                            <input
-                                                type="email"
-                                                placeholder="admin@ashesi.edu.gh"
-                                                value={newAdminEmail}
-                                                onChange={(e) => setNewAdminEmail(e.target.value)}
-                                                className="w-full px-3 py-2 border rounded-md text-sm"
-                                                required
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium mb-2">Password</label>
-                                            <div className="relative">
-                                                <input
-                                                    type={showAdminPassword ? "text" : "password"}
-                                                    placeholder="••••••••"
-                                                    value={newAdminPassword}
-                                                    onChange={(e) => setNewAdminPassword(e.target.value)}
-                                                    className="w-full px-3 py-2 pr-10 border rounded-md text-sm"
-                                                    required
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowAdminPassword(!showAdminPassword)}
-                                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                                                >
-                                                    {showAdminPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {newAdminPassword && (
-                                        <div className="mt-4">
-                                            <PasswordStrengthIndicator strength={adminPasswordStrength} password={newAdminPassword} />
-                                        </div>
-                                    )}
-                                    <div className="mt-4 flex justify-end">
-                                        <Button type="submit" disabled={addingAdmin || !adminPasswordStrength.isValid}>
-                                            {addingAdmin ? 'Creating...' : 'Create Admin'}
-                                        </Button>
-                                    </div>
-                                </form>
+
 
                                 {/* Users Table */}
                                 <div className="overflow-x-auto">
@@ -298,20 +299,179 @@ export default function AdminDashboard() {
                                                     </td>
                                                     <td className="p-4 text-muted-foreground">{new Date(user.created_at).toLocaleDateString()}</td>
                                                     <td className="p-4 text-right flex justify-end gap-2">
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => handleToggleAdmin(user)}
-                                                            className={user.role === 'admin' ? 'text-red-600 hover:text-red-700' : 'text-blue-600 hover:text-blue-700'}
-                                                        >
-                                                            {user.role === 'admin' ? 'Revoke Admin' : 'Make Admin'}
-                                                        </Button>
+
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
                                                             className="text-red-500 hover:text-red-700 hover:bg-red-50"
                                                             onClick={() => handleDeleteUser(user.id)}
                                                             disabled={user.role === 'admin'} // Prevent deleting admins for safety
+                                                        >
+                                                            <Trash2 size={18} />
+                                                        </Button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    <TabsContent value="courses">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Manage Courses</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left">
+                                        <thead>
+                                            <tr className="border-b">
+                                                <th className="p-4 font-semibold">Code</th>
+                                                <th className="p-4 font-semibold">Name</th>
+                                                <th className="p-4 font-semibold">Instructor</th>
+                                                <th className="p-4 font-semibold">Rating</th>
+                                                <th className="p-4 font-semibold text-right">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {courses.map((course) => (
+                                                <tr key={course.id} className="border-b last:border-0 hover:bg-muted/50">
+                                                    <td className="p-4 font-medium">{course.code}</td>
+                                                    <td className="p-4">{course.name}</td>
+                                                    <td className="p-4 text-muted-foreground">{course.instructor || 'N/A'}</td>
+                                                    <td className="p-4">{course.rating}/5 ({course.reviews_count})</td>
+                                                    <td className="p-4 text-right">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                                            onClick={() => handleDeleteEntity(course.id, 'courses')}
+                                                        >
+                                                            <Trash2 size={18} />
+                                                        </Button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    <TabsContent value="lecturers">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Manage Lecturers</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left">
+                                        <thead>
+                                            <tr className="border-b">
+                                                <th className="p-4 font-semibold">Name</th>
+                                                <th className="p-4 font-semibold">Department</th>
+                                                <th className="p-4 font-semibold">Rating</th>
+                                                <th className="p-4 font-semibold text-right">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {lecturers.map((lecturer) => (
+                                                <tr key={lecturer.id} className="border-b last:border-0 hover:bg-muted/50">
+                                                    <td className="p-4 font-medium">{lecturer.name}</td>
+                                                    <td className="p-4 text-muted-foreground">{lecturer.department || 'N/A'}</td>
+                                                    <td className="p-4">{lecturer.rating}/5 ({lecturer.reviews_count})</td>
+                                                    <td className="p-4 text-right">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                                            onClick={() => handleDeleteEntity(lecturer.id, 'lecturers')}
+                                                        >
+                                                            <Trash2 size={18} />
+                                                        </Button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    <TabsContent value="restaurants">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Manage Restaurants</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left">
+                                        <thead>
+                                            <tr className="border-b">
+                                                <th className="p-4 font-semibold">Name</th>
+                                                <th className="p-4 font-semibold">Location</th>
+                                                <th className="p-4 font-semibold">Rating</th>
+                                                <th className="p-4 font-semibold text-right">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {restaurants.map((restaurant) => (
+                                                <tr key={restaurant.id} className="border-b last:border-0 hover:bg-muted/50">
+                                                    <td className="p-4 font-medium">{restaurant.name}</td>
+                                                    <td className="p-4 text-muted-foreground">{restaurant.location || 'N/A'}</td>
+                                                    <td className="p-4">{restaurant.rating}/5 ({restaurant.reviews_count})</td>
+                                                    <td className="p-4 text-right">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                                            onClick={() => handleDeleteEntity(restaurant.id, 'restaurants')}
+                                                        >
+                                                            <Trash2 size={18} />
+                                                        </Button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    <TabsContent value="hostels">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Manage Hostels</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left">
+                                        <thead>
+                                            <tr className="border-b">
+                                                <th className="p-4 font-semibold">Name</th>
+                                                <th className="p-4 font-semibold">Location</th>
+                                                <th className="p-4 font-semibold">Rating</th>
+                                                <th className="p-4 font-semibold text-right">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {hostels.map((hostel) => (
+                                                <tr key={hostel.id} className="border-b last:border-0 hover:bg-muted/50">
+                                                    <td className="p-4 font-medium">{hostel.name}</td>
+                                                    <td className="p-4 text-muted-foreground">{hostel.location || 'N/A'}</td>
+                                                    <td className="p-4">{hostel.rating}/5 ({hostel.reviews_count})</td>
+                                                    <td className="p-4 text-right">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                                            onClick={() => handleDeleteEntity(hostel.id, 'hostels')}
                                                         >
                                                             <Trash2 size={18} />
                                                         </Button>

@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { supabaseServer } from '@/lib/supabaseServer';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { SESSION_COOKIE, parseSessionToken } from '@/lib/session';
 import { validateEmail, getPasswordErrorMessage } from '@/lib/validation';
 
@@ -16,36 +16,41 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        if (!supabaseServer) {
-            return NextResponse.json({ error: 'Database client not configured' }, { status: 500 });
+        if (!supabaseAdmin) {
+            return NextResponse.json({ error: 'Admin database client not configured' }, { status: 500 });
         }
 
         const [
             { data: users, error: usersError },
             { data: admins, error: adminsError }
         ] = await Promise.all([
-            supabaseServer
-                .from('profiles')
-                .select('id, full_name, email, created_at')
+            supabaseAdmin
+                .from('app_users')
+                .select('id, first_name, last_name, email, created_at')
                 .order('created_at', { ascending: false }),
-            supabaseServer
+            supabaseAdmin
                 .from('admins')
                 .select('email')
         ]);
 
         if (usersError) {
+            console.error('Error fetching users:', usersError);
             return NextResponse.json({ error: usersError.message }, { status: 500 });
         }
 
         const adminEmails = new Set((admins || []).map(a => a.email));
 
         const usersWithRole = (users || []).map(u => ({
-            ...u,
+            id: u.id,
+            full_name: `${u.first_name} ${u.last_name}`.trim(),
+            email: u.email,
+            created_at: u.created_at,
             role: adminEmails.has(u.email) ? 'admin' : 'user'
         }));
 
         return NextResponse.json({ users: usersWithRole });
     } catch (error: any) {
+        console.error('Error in GET /api/admin/users:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
@@ -66,12 +71,12 @@ export async function DELETE(req: NextRequest) {
         const email = searchParams.get('email');
         const action = searchParams.get('action'); // 'delete_user' or 'remove_admin'
 
-        if (!supabaseServer) {
-            return NextResponse.json({ error: 'Database client not configured' }, { status: 500 });
+        if (!supabaseAdmin) {
+            return NextResponse.json({ error: 'Admin database client not configured' }, { status: 500 });
         }
 
         if (action === 'remove_admin' && email) {
-            const { error } = await supabaseServer
+            const { error } = await supabaseAdmin
                 .from('admins')
                 .delete()
                 .eq('email', email);
@@ -81,8 +86,8 @@ export async function DELETE(req: NextRequest) {
         }
 
         if (action === 'delete_user' && id) {
-            const { error } = await supabaseServer
-                .from('profiles')
+            const { error } = await supabaseAdmin
+                .from('app_users')
                 .delete()
                 .eq('id', id);
 
@@ -122,12 +127,12 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: passwordError }, { status: 400 });
         }
 
-        if (!supabaseServer) {
-            return NextResponse.json({ error: 'Database client not configured' }, { status: 500 });
+        if (!supabaseAdmin) {
+            return NextResponse.json({ error: 'Admin database client not configured' }, { status: 500 });
         }
 
         // Insert new admin with validated and sanitized data
-        const { error } = await supabaseServer.rpc('create_admin', {
+        const { error } = await supabaseAdmin.rpc('create_admin', {
             _email: emailValidation.sanitized!,
             _password: password
         });
