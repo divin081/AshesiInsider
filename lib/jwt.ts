@@ -1,7 +1,9 @@
+// JWT utilities - Sign and verify tokens using HS256
 import crypto from 'crypto';
 
 type JwtPayload = Record<string, unknown>;
 
+// Convert to URL-safe base64
 function base64url(input: Buffer | string) {
   return Buffer.from(input)
     .toString('base64')
@@ -10,6 +12,7 @@ function base64url(input: Buffer | string) {
     .replace(/\//g, '_');
 }
 
+// Create signed JWT token
 export function signJwtHS256(payload: JwtPayload, secret: string): string {
   const header = { alg: 'HS256', typ: 'JWT' };
   const encodedHeader = base64url(JSON.stringify(header));
@@ -20,6 +23,7 @@ export function signJwtHS256(payload: JwtPayload, secret: string): string {
   return `${data}.${encodedSignature}`;
 }
 
+// Verify JWT and return payload if valid
 export function verifyJwtHS256<T extends JwtPayload = JwtPayload>(
   token: string,
   secret: string

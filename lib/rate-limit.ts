@@ -1,3 +1,4 @@
+// Rate Limiter - Prevents brute force attacks on login
 type RateLimitRecord = {
     attempts: number
     lockoutUntil: number | null

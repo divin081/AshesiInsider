@@ -1,3 +1,5 @@
+// Main App Shell - Handles navigation, authentication state, and page routing
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -39,9 +41,11 @@ export default function Home() {
     void loadSession();
   }, []);
 
+    // Pages that require authentication
   const protectedPages = new Set(['courses', 'restaurants', 'lecturers', 'hostels', 'profile']);
 
   const handleNavigate = (page: string) => {
+    // Handle add-review navigation
     if (page.startsWith('add-review-')) {
       const type = page.replace('add-review-', '') as 'courses' | 'restaurants' | 'lecturers' | 'hostels';
       if (!isAuthed) {
@@ -53,6 +57,7 @@ export default function Home() {
       setCurrentPage('add-review');
       return;
     }
+    // Require auth for protected pages
     if (protectedPages.has(page) && !isAuthed) {
       setPendingPage(page);
       setShowSignIn(true);

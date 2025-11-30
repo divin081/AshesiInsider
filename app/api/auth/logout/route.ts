@@ -1,3 +1,4 @@
+// Logout API - Clears session cookie to end user session
 import { NextResponse } from 'next/server'
 import { SESSION_COOKIE } from '@/lib/session'
 
@@ -11,7 +12,7 @@ export async function POST() {
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
-    maxAge: 0,
+    maxAge: 0,      // Expires immediately
   })
   return res
 }

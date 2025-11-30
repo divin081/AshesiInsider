@@ -1,3 +1,4 @@
+// Login API - Authenticates users and admins with rate limiting
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabaseServer'
@@ -11,6 +12,7 @@ export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
   try {
+    // Check rate limit (3 attempts, then 5 min lockout)
     const ip = req.headers.get('x-forwarded-for') ?? '127.0.0.1'
     const { blocked, remaining, resetTime } = RateLimiter.check(ip)
 
@@ -22,6 +24,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // Parse and validate input
     const body = await req.json().catch(() => ({}))
     const emailInput = (body.email ?? '').toLowerCase().trim()
     const password = body.password ?? ''

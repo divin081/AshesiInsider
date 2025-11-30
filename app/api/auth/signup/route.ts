@@ -1,3 +1,4 @@
+// Signup API - Registers new users with validation and password hashing
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabaseServer'
@@ -40,7 +41,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: emailValidation.error }, { status: 400 })
     }
 
-    // Validate password strength
+    // Check password strength (8+ chars, uppercase, lowercase, number, special char)
     const passwordError = getPasswordErrorMessage(password)
     if (passwordError) {
       return NextResponse.json({ error: passwordError }, { status: 400 })
@@ -50,8 +51,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Database client not configured' }, { status: 500 })
     }
 
-    // Use SECURITY DEFINER RPC to insert safely with server-side hashing
-    // Use sanitized values from validation
+    // Register user - password is hashed server-side via pgcrypto
     const { data, error } = await supabaseServer.rpc('register_user', {
       _first_name: firstNameValidation.sanitized!,
       _last_name: lastNameValidation.sanitized!,
@@ -70,6 +70,7 @@ export async function POST(req: NextRequest) {
 
     const created = Array.isArray(data) ? data[0] : data
 
+    // Create session token for auto-login after signup
     const token = createSessionToken({
       sub: Number(created.id),
       email: emailValidation.sanitized!,
