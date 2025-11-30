@@ -7,33 +7,32 @@ import {
 	BookOpen,
 	HomeIcon,
 	Search,
-		ChevronDown,
+	ChevronDown,
 	Sparkles,
 	UtensilsCrossed,
 	Users,
-		MessageSquare,
-		ClipboardList,
-		Building2,
-		Banknote,
+	MessageSquare,
+	ClipboardList,
+	Building2,
+	Banknote,
 } from 'lucide-react';
-import SignInModal from '@/components/sign-in-modal';
+
 
 interface HomePageProps {
-  onNavigate: (page: string) => void;
+	onNavigate: (page: string) => void;
 }
 
 export default function HomePage({ onNavigate }: HomePageProps) {
-	const [showSignIn, setShowSignIn] = useState(false);
 	const [query, setQuery] = useState('');
 
 	const categories = [
-    {
-      id: 'courses',
-      title: 'Courses',
+		{
+			id: 'courses',
+			title: 'Courses',
 			description: 'Read and share course experiences',
-      icon: BookOpen,
+			icon: BookOpen,
 			color: 'from-emerald-500 to-teal-500',
-    },
+		},
 		{
 			id: 'lecturers',
 			title: 'Lecturers',
@@ -41,23 +40,23 @@ export default function HomePage({ onNavigate }: HomePageProps) {
 			icon: Users,
 			color: 'from-blue-500 to-indigo-500',
 		},
-    {
-      id: 'restaurants',
-      title: 'Restaurants',
+		{
+			id: 'restaurants',
+			title: 'Restaurants',
 			description: 'Best bites on and off campus',
-      icon: UtensilsCrossed,
+			icon: UtensilsCrossed,
 			color: 'from-orange-500 to-amber-500',
-    },
-    {
-      id: 'hostels',
-      title: 'Hostels',
+		},
+		{
+			id: 'hostels',
+			title: 'Hostels',
 			description: 'Find the right place to live',
-      icon: HomeIcon,
+			icon: HomeIcon,
 			color: 'from-purple-500 to-fuchsia-500',
-    },
-  ];
+		},
+	];
 
-  return (
+	return (
 		<main className="min-h-screen bg-background text-foreground">
 			{/* Hero */}
 			<section className="relative overflow-hidden">
@@ -189,7 +188,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
 							</p>
 						</div>
 						<button
-							onClick={() => setShowSignIn(true)}
+							onClick={() => onNavigate('courses')}
 							className="mt-6 inline-flex items-center justify-center gap-2 h-12 px-6 rounded-lg border border-border font-semibold hover:bg-accent/50 transition-colors"
 						>
 							Write a review
@@ -198,18 +197,8 @@ export default function HomePage({ onNavigate }: HomePageProps) {
 					</div>
 				</div>
 			</section>
-
-			{showSignIn && (
-				<SignInModal
-					onClose={() => setShowSignIn(false)}
-					onSuccess={() => {
-						setShowSignIn(false);
-						onNavigate('courses');
-					}}
-				/>
-			)}
 		</main>
-  );
+	);
 }
 
 function Stat({ value, label }: { value: string; label: string }) {
